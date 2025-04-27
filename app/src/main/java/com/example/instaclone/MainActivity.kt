@@ -1,6 +1,8 @@
 package com.example.instaclone
 
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
@@ -24,11 +26,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.instaclone.ui.theme.InstaCloneTheme
+import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,8 +54,7 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
-    onLoginClick: () ->Unit,
-    onSignUpClick:() -> Unit
+    onSignUpClick: () -> Unit
 ){
     Column (
         modifier = Modifier
@@ -79,8 +82,22 @@ fun LoginScreen(
         label = { Text(text = "Password")},
         modifier = Modifier.fillMaxWidth(),
         visualTransformation = PasswordVisualTransformation())
+        val auth = FirebaseAuth.getInstance()
+        val context = LocalContext.current
+        Button(onClick = {
+        auth.signInWithEmailAndPassword(email, password).addOnCompleteListener {
+            task->
+            if(task.isSuccessful){
+                Toast.makeText(context, "Login in Success",Toast.LENGTH_SHORT).show()
 
-        Button(onClick = onLoginClick, modifier = Modifier.fillMaxWidth()) {
+
+            }
+            else{
+                Log.d("login","login failed")
+                Toast.makeText(context,"Login Failed", Toast.LENGTH_SHORT).show()
+            }
+        }
+        }, modifier = Modifier.fillMaxWidth()) {
             Text(text = "Login")
         }
 
@@ -95,7 +112,6 @@ fun LoginScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignUpScreen(
-    onSignUpClick: () -> Unit,
     onLoginClick: () -> Unit
 ){
     Column(modifier = Modifier
@@ -123,8 +139,20 @@ fun SignUpScreen(
         OutlinedTextField(value = password, onValueChange = {password = it}, label = { Text(text = "Password")}, modifier = Modifier.fillMaxWidth(), visualTransformation = PasswordVisualTransformation())
 
         Spacer(modifier = Modifier.height(32.dp))
+        val auth = FirebaseAuth.getInstance()
+        val context = LocalContext.current
+        Button(onClick = {
+            auth.createUserWithEmailAndPassword(email,password).addOnCompleteListener {
+                task->
+                if(task.isSuccessful){
 
-        Button(onClick = onSignUpClick, modifier = Modifier.fillMaxWidth()) {
+                    Toast.makeText(context,"Sign up success",Toast.LENGTH_SHORT).show()
+                 }
+                else{
+                    Log.d("Signup","Sign up failed")
+                    Toast.makeText(context,"Sign up Failed",Toast.LENGTH_SHORT).show()}
+            }
+        }, modifier = Modifier.fillMaxWidth()) {
             Text(text = "Sign Up")
         }
         Spacer(modifier = Modifier.height(16.dp))
@@ -141,11 +169,10 @@ fun AuthScreen(){
         mutableStateOf(true)
     }
     if(showLogin){
-        LoginScreen(onLoginClick = { /*TODO*/ },
-        onSignUpClick = {showLogin = false})
+        LoginScreen(onSignUpClick = {showLogin = false})
     }
     else{
-        SignUpScreen(onSignUpClick = { /*TODO*/ }, onLoginClick = {showLogin=true})
+        SignUpScreen(onLoginClick = {showLogin=true})
     }
 }
 
